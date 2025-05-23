@@ -25,12 +25,6 @@ echo "Downloading CloudFormation template from $TEMPLATE_URL..."
 curl -fsSL "$TEMPLATE_URL" -o "$TEMPLATE_FILE"
 
 echo "Deploying CloudFormation stack..."
-echo "  IacRoleArn: $IAC_ROLE_ARN"
-echo "  UniqueId: $UNIQUE_ID"
-echo "  ExternalId: $EXTERNAL_ID"
-echo "  StackName: $STACK_NAME"
-echo "  TemplateFile: $TEMPLATE_FILE"
-
 aws cloudformation deploy \
   --stack-name "$STACK_NAME" \
   --template-file "$TEMPLATE_FILE" \
@@ -43,4 +37,16 @@ aws cloudformation deploy \
 echo "Cleaning up..."
 rm -f "$TEMPLATE_FILE"
 
-echo "Deployment complete."
+# Fetch and print the role ARNs for user copy-paste
+ORCH_ARN=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" \
+  --query "Stacks[0].Outputs[?OutputKey=='OrchestratorRoleArn'].OutputValue" --output text)
+EXEC_ARN=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" \
+  --query "Stacks[0].Outputs[?OutputKey=='ExecutorRoleArn'].OutputValue" --output text)
+
+echo ""
+echo "=============================="
+echo "Orchestrator Role ARN: $ORCH_ARN"
+echo "Executor Role ARN:     $EXEC_ARN"
+echo "=============================="
+echo ""
+echo "Copy and paste the above ARNs into the UI as instructed."
