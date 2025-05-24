@@ -5,8 +5,8 @@ set -e
 TEMPLATE_URL="https://raw.githubusercontent.com/cipherops-io/coops-pubf/main/coops-roles.yaml"
 
 usage() {
-  echo "Usage: $0 <iac_role_arn> <unique_id> <external_id> <stack_name>"
-  echo "Example: $0 arn:aws:iam::1234567890:role/coops-12345-xxxx-iac-role 12345 MTIzNDU= coops-roles"
+  echo "Usage: $0 <iac_role_arn> <unique_id> <external_id_uuid> <stack_name>"
+  echo "Example: $0 arn:aws:iam::1234567890:role/coops-12345-xxxx-iac-role 12345 123e4567-e89b-12d3-a456-426614174000 coops-orchestrator"
   exit 1
 }
 
@@ -37,16 +37,13 @@ aws cloudformation deploy \
 echo "Cleaning up..."
 rm -f "$TEMPLATE_FILE"
 
-# Fetch and print the role ARNs for user copy-paste
+# Fetch and print the Orchestrator Role ARN for user copy-paste
 ORCH_ARN=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" \
   --query "Stacks[0].Outputs[?OutputKey=='OrchestratorRoleArn'].OutputValue" --output text)
-EXEC_ARN=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" \
-  --query "Stacks[0].Outputs[?OutputKey=='ExecutorRoleArn'].OutputValue" --output text)
 
 echo ""
 echo "=============================="
 echo "Orchestrator Role ARN: $ORCH_ARN"
-echo "Executor Role ARN:     $EXEC_ARN"
 echo "=============================="
 echo ""
-echo "Copy and paste the above ARNs into the UI as instructed."
+echo "Copy and paste the above ARN into the UI as instructed."
