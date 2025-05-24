@@ -1,19 +1,17 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >
-  Creates Orchestrator and Executor roles for CoOps integration.
-  - Orchestrator: Can update Executor's IAM policies.
-  - Executor: Used for actual execution.
+  Creates a CoOps Orchestrator IAM role that can dynamically create, update, and delete project-specific executor roles.
 
 Parameters:
   IacRoleArn:
     Type: String
-    Description: The full ARN of the CoOps IAM role allowed to assume these roles (e.g., arn:aws:iam::1234567890:role/coops-12345-xxxx-iac-role)
+    Description: The full ARN of the CoOps IAM role allowed to assume this role (e.g., arn:aws:iam::1234567890:role/coops-12345-xxxx-iac-role)
   UniqueId:
     Type: String
     Description: A unique identifier for this deployment (e.g., 12345)
   ExternalId:
     Type: String
-    Description: The ExternalId required for trust (e.g., coops-xxxxx)
+    Description: The unique ID required for trust (e.g., 123e4567-e89b-12d3-a456-426614174000)
 
 Resources:
   OrchestratorRole:
@@ -30,60 +28,54 @@ Resources:
             Condition:
               StringEquals:
                 sts:ExternalId: !Ref ExternalId
-          - Effect: Allow
-            Principal:
-              Service:
-                - ec2.amazonaws.com
-                - eks.amazonaws.com
-                - ecs.amazonaws.com
-                - lambda.amazonaws.com
-                - pods.eks.amazonaws.com
-            Action:
-              - sts:AssumeRole
-              - sts:TagSession
       Policies:
-        - PolicyName: OrchestratorUpdateExecutorPolicy
+        - PolicyName: OrchestratorIAMManagementPolicy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
               - Effect: Allow
                 Action:
+                  - iam:CreateRole
+                  - iam:DeleteRole
+                  - iam:UpdateRole
+                  - iam:GetRole
+                  - iam:ListRoles
                   - iam:PutRolePolicy
                   - iam:DeleteRolePolicy
                   - iam:GetRolePolicy
-                Resource: !Sub arn:aws:iam::*:role/coops-executor-${UniqueId}-role
-
-  ExecutorRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: !Sub coops-executor-${UniqueId}-role
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              AWS: !Ref IacRoleArn
-            Action: sts:AssumeRole
-            Condition:
-              StringEquals:
-                sts:ExternalId: !Ref ExternalId
-          - Effect: Allow
-            Principal:
-              Service:
-                - ec2.amazonaws.com
-                - eks.amazonaws.com
-                - ecs.amazonaws.com
-                - lambda.amazonaws.com
-                - pods.eks.amazonaws.com
-            Action:
-              - sts:AssumeRole
-              - sts:TagSession
-      # No permissions by default; Orchestrator will manage these dynamically
-
+                  - iam:AttachRolePolicy
+                  - iam:DetachRolePolicy
+                  - iam:TagRole
+                  - iam:UntagRole
+                  - iam:PassRole
+                  - iam:ListRolePolicies
+                  - iam:ListAttachedRolePolicies
+                  - iam:ListRoleTags
+                Resource: !Sub arn:aws:iam::${AWS::AccountId}:role/coops-executor-*-role
+              - Effect: Allow
+                Action:
+                  - iam:CreatePolicy
+                  - iam:DeletePolicy
+                  - iam:GetPolicy
+                  - iam:ListPolicies
+                  - iam:ListPolicyVersions
+                  - iam:CreatePolicyVersion
+                  - iam:DeletePolicyVersion
+                  - iam:GetPolicyVersion
+                  - iam:ListPolicyTags
+                  - iam:TagPolicy
+                  - iam:UntagPolicy
+                Resource: !Sub arn:aws:iam::${AWS::AccountId}:policy/coops-executor-*-policy
+              - Effect: Allow
+                Action:
+                  - iam:PassRole
+                Resource: !Sub arn:aws:iam::${AWS::AccountId}:role/coops-executor-*-role
+              - Effect: Allow
+                Action:
+                  - iam:GetUser
+                  - iam:ListUsers
+                Resource: "*"
 Outputs:
   OrchestratorRoleArn:
     Description: ARN of the Orchestrator role
     Value: !GetAtt OrchestratorRole.Arn
-  ExecutorRoleArn:
-    Description: ARN of the Executor role
-    Value: !GetAtt ExecutorRole.Arn
