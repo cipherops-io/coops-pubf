@@ -1,0 +1,89 @@
+nameOverride: ""
+fullnameOverride: ""
+
+image:
+  repository: ""
+  pullPolicy: IfNotPresent
+  tag: ""
+imagePullSecrets: []
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+replicaCount: 1
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 85
+  targetMemoryUtilizationPercentage: 85
+
+livenessProbe: {}
+readinessProbe: {}
+startupProbe: {}
+
+resources: {}
+# Adjust them as necessary, and remove the curly braces after 'resources:'.
+# limits:
+#   cpu: 100m
+#   memory: 128Mi
+# requests:
+#   cpu: 100m
+#   memory: 128Mi
+
+podAnnotations: {}
+podLabels: {}
+
+service:
+  type: ClusterIP
+  port: 8080
+
+serviceAccount:
+  create: true
+  name: ""
+  automount: true
+  annotations: {}
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts: []
+  tls: []
+
+#ingress:
+#  enabled: false
+#  className: ""
+#  annotations: {}
+#    # kubernetes.io/ingress.class: nginx
+#    # kubernetes.io/tls-acme: "true"
+#  hosts:
+#    - host: chart-example.local
+#      paths:
+#        - path: /
+#          pathType: ImplementationSpecific
+#  tls: []
+#  #  - secretName: chart-example-tls
+#  #    hosts:
+#  #      - chart-example.local
+
+
+# all static environment variables. These are the ones which are not a secrets.
+# ex:
+# envs:
+#   - ENVIRONMENT_VARIABLE_1: value1
+#   - ENVIRONMENT_VARIABLE_2: value2
+# and so on.
+# with these the container will get environment variables like ENVIRONMENT_VARIABLE_1 and ENVIRONMENT_VARIABLE_2,
+#   whose value will be value1 and value2 respectively.
+envs: []
+
+# all external secrets variables.
+# ex:
+# envSecrets:
+#   - ENVIRONMENT_VARIABLE_1: name_of_the_secret_manager_secret_for_this_variable
+envSecrets: []
+
+cloudProvider: ""
+envRegion: ""
