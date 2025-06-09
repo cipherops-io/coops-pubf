@@ -1,0 +1,41 @@
+name: Build docker images
+
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on:
+      group: self-hosted
+      labels: [ rockylinux9, linux, x86_64 ]
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: setup AWS ECR credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ vars.CIOPS_STAGING_ECR_REGION }}
+          aws-access-key-id: ${{ secrets.CIOPS_STAGING_ECR_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.CIOPS_STAGING_ECR_SECRET_ACCESS_KEY }}
+
+      - name: login to AWS ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: build and push docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          build-args: |
+            BASE_IMAGE=${{ vars.CIOPS_STAGING_ECR_REPO_BASE }}/external/ubi8/openjdk-17:1.21
+          tags: |
+            ${{ vars.CIOPS_STAGING_ECR_REPO_BASE }}/ciops/gateway:staging.${{ github.sha }}
